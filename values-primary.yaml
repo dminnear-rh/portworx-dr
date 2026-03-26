@@ -1,0 +1,48 @@
+clusterGroup:
+  name: primary
+
+  namespaces:
+    - vault
+    - golang-external-secrets
+    - open-cluster-management
+    - portworx
+
+  subscriptions:
+    acm:
+      name: advanced-cluster-management
+      namespace: open-cluster-management
+      channel: release-2.15
+    portworx:
+      name: portworx-certified
+      namespace: portworx
+      source: certified-operators
+
+  applications:
+    acm:
+      name: acm
+      namespace: open-cluster-management
+      chart: acm
+      chartVersion: 0.2.*
+    golang-external-secrets:
+      name: golang-external-secrets
+      namespace: golang-external-secrets
+      chart: golang-external-secrets
+      chartVersion: 0.2.*
+    vault:
+      name: vault
+      namespace: vault
+      chart: hashicorp-vault
+      chartVersion: 0.1.*
+    portworx:
+      name: portworx
+      namespace: portworx-dr
+      path: charts/portworx
+      extraValueFiles:
+        - /overrides/portworx.yaml
+
+  managedClusterGroups:
+    secondary-region:
+      name: secondary
+      acmlabels:
+        - name: clusterGroup
+          value: secondary

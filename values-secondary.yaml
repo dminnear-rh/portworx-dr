@@ -1,0 +1,25 @@
+clusterGroup:
+  name: secondary
+
+  namespaces:
+    - golang-external-secrets
+    - portworx
+
+  subscriptions:
+    portworx:
+      name: portworx-certified
+      namespace: portworx
+      source: certified-operators
+
+  applications:
+    golang-external-secrets:
+      name: golang-external-secrets
+      namespace: golang-external-secrets
+      chart: golang-external-secrets
+      chartVersion: 0.2.*
+    portworx:
+      name: portworx
+      namespace: portworx-dr
+      path: charts/portworx
+      extraValueFiles:
+        - /overrides/portworx.yaml

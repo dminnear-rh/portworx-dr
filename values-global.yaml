@@ -1,0 +1,9 @@
+global:
+  pattern: portworx-dr
+  secretLoader:
+    disabled: false
+main:
+  clusterGroupName: primary
+  multiSourceConfig:
+    enabled: true
+    clusterGroupChartVersion: 0.9.*
