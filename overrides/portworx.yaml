@@ -4,12 +4,7 @@ defaultStorageClassName: 'px-csi-db-shared'
 # This is for the portworx cluster to be able to come up if only 2 AZs are available
 storage:
   maxStorageNodesPerZone: "3"
-  drives: "type=gp2,size=100"
-
-# Filesystem mode seems to want the volume to be bigger
-vms:
-  kiosk:
-    storage: 40Gi
+  drives: "type=gp3,size=100"
 
 secrets:
   useExternalSecrets: true

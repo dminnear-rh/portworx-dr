@@ -1,5 +1,6 @@
 global:
   clusterPlatform: AWS
+  clusterDomain: cluster-name.example.com
 
 cloudProvider:
   storageClass: default-rwo
@@ -8,19 +9,19 @@ namespace: portworx              # Recommended namespace for install is 'portwor
 pxnamespace: portworx              # Recommended namespace for install is 'portworx', change to desired namespace if default is unacceptable
 
 secrets:
-  useExternalSecrets: false
+  useExternalSecrets: false      # Set to true for the aws-cred secret to be created by external secrets (use this in a validated pattern)
   AWSsecretName: aws-creds
   AWSsecretNamespace: kube-system
 
 storage:
   usefileSystemDrive: false         # true/false Instructs PX to use an unmounted Drive even if it has a filesystem.
   usedrivesAndPartitions: false     # Defaults to false. Change to true and PX will use unmounted drives and partitions.
-  drives: "type=gp2,size=20"        # NOTE: This is a ";" seperated list of drives. For eg: "/dev/sda;/dev/sdb;/dev/sdc"
+  drives: "type=gp3,size=20"        # NOTE: This is a ";" seperated list of drives. For eg: "/dev/sda;/dev/sdb;/dev/sdc"
                                     # Defaults to use -A switch.
                                     # To have drives automatically created specify the drive spec. For Eg: "type=gp2,size=150" or "type=io1,size=100,iops=2000"
   journalDevice:
   maxStorageNodesPerZone: "1"	    # WARNING: If you are running in a cloud region with two or less Availability Zones, you must set this to 2 (2 AZs) or 3 (1 AZ) for a minimum configuration (3-node cluster). This is NOT a recommended configuration as it could lead to data loss - Portworx recommends that storage nodes are split evenly across AZs for maximum storage resiliency.
-  kvdbDrives: "type=gp2,size=150"
+  kvdbDrives: "type=gp3,size=150"
 
 network:
   dataInterface: none               # Name of the interface <ethX>
@@ -46,8 +47,7 @@ deleteStrategy: UninstallAndWipe    # Options are Uninstall and UninstallAndWipe
 
 # You can determine the correct versions at the following URL: https://install.portworx.com/$PXVER/version?kbver=$KBVER
 versions:
-  #operator: "1.10.4"  # unless a specific operator from OperatorHub is necessary, leave this commented
-  enterprise: "2.13.4" # This will be the "version" string
-  ociMon: "2.13.4" # This will be the "version" string
-  autoPilot: "1.3.7" # This will be the "portworx/autopilot" version string
-  stork: "23.4.0" # This will be the "openstorage/stork" version string
+  enterprise: "3.5.2.1" # This will be the "version" string
+  ociMon: "3.5.2.1" # This will be the "version" string
+  autoPilot: "1.4.0" # This will be the "portworx/autopilot" version string
+  stork: "26.2.0" # This will be the "openstorage/stork" version string

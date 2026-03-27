@@ -59,19 +59,6 @@
 {{- end -}}
 {{- end -}}
 
-{{- define "px.getOperatorImage" -}}
-{{- $product := .Values.awsProduct | default "PX-ENTERPRISE" }}
-{{- if (.Values.customRegistryURL) -}}
-  {{- if (eq "/" (.Values.customRegistryURL | regexFind "/")) -}}
-    {{- cat (trim .Values.customRegistryURL) "/px-operator:" (trim .Values.versions.operator) | replace " " ""}}
-  {{- else -}}
-    {{- cat (trim .Values.customRegistryURL) "/px-operator:" (trim .Values.versions.operator) | replace " " ""}}
-  {{- end -}}
-{{- else -}}
-  {{- cat "portworx/px-operator:" (trim .Values.versions.operator) | replace " " ""}}
-{{- end -}}
-{{- end -}}
-
 {{- define "px.clusterName" -}}
 {{- $fullClusterName := print "px-cluster-" .Values.global.clusterDomain }}
 {{- (split "." $fullClusterName)._0 }}

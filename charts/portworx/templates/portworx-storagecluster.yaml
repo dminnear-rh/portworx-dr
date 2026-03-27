@@ -55,12 +55,11 @@ spec:
     - name: PX_SERVICE_ACCOUNT
       value: {{ $serviceAccount }}
     {{- end }}
-    # TODO: Change this hardcoded image path to an ECR registry path with px-enterprise image (PWX-27961)
     - name: PX_IMAGE
-      value: docker.io/portworx/px-enterprise:2.13.0
+      value: {{ include "px.getImage" .}}
     - name: PX_NAMESPACE
       value: {{ $namespace }}
-  image: "{{template "px.getOCIImage" . }}"
+  image: {{ include "px.getOCIImage" .}}
   imagePullPolicy: Always
   {{- if not (eq $registrySecret "none") }}
   imagePullSecret: {{ $registrySecret }}
@@ -110,9 +109,14 @@ spec:
     enabled: true
     args:
       webhook-controller: "true"
-    image: "{{ template "px.getStorkImage" . }}"
+    image: {{ include "px.getStorkImage" . }}
   autopilot:
     enabled: true
-    image: "{{ template "px.getAutopilotImage" . }}"
+    image: {{ include "px.getAutopilotImage" . }}
   csi:
     enabled: {{ .Values.csi  | default "true" }}
+  monitoring:
+    telemetry:
+      enabled: true
+    prometheus:
+      exportMetrics: true
