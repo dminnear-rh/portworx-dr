@@ -89,7 +89,7 @@ spec:
     kvdbDeviceSpec: {{ $kvdbDrives }}
     {{- end }}
     {{- if ne $maxStorageNodesPerZone 0 }}
-    maxStorageNodesPerZone: {{ $maxStorageNodesPerZone }}
+    # maxStorageNodesPerZone: {{ $maxStorageNodesPerZone }}
     {{- end }}
   {{- end }}
   {{- if ne .Values.secretType "k8s" }}
