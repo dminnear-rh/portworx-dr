@@ -7,7 +7,7 @@ metadata:
   name: px-aws-prereqs-configmap
   namespace: {{ .Values.namespace }}
 data:
-  px_aws_pre-reqs.sh: |	
+  px_aws_pre-reqs.sh: |
     #!/bin/bash
 
     export AWS_CONFIG_FILE=/pattern-home/credentials/.aws/config
@@ -62,7 +62,7 @@ data:
     else
       echo "Configuring for Portworx/Red Hat Multicloud GitOps Pattern."
     fi
-    
+
     # Ensure there are a minimum of three worker nodes in the cluster
     NUM_WORKERS=$(oc get node -l 'node-role.kubernetes.io/worker=' -o name | wc -l)
     if [ $NUM_WORKERS -lt 3 ];
@@ -72,7 +72,7 @@ data:
     else
       echo "Found $NUM_WORKERS worker nodes - configuring..."
     fi
-    
+
     # Get the list of worker nodes in the cluster
     WORKERS=$(oc get node -l 'node-role.kubernetes.io/worker=' -o name)
 
@@ -85,7 +85,7 @@ data:
       AWS_REGION=$(oc get $NODE -o jsonpath='{.metadata.labels.topology\.kubernetes\.io/region}')
       AWS_SG=$(aws ec2 describe-instances --instance-id $AWS_INSTANCE --region=$AWS_REGION --query "Reservations[].Instances[].SecurityGroups[].GroupId[]" --output text)
       for GROUP in $AWS_SG; do
-        OCP_SG=$(aws ec2 describe-security-groups --group-ids $GROUP --query SecurityGroups[*].Description | grep -w "Created By OpenShift Installer" | wc -l)
+        OCP_SG=$(aws ec2 describe-security-groups --group-ids $GROUP --query SecurityGroups[*].Description | grep -w ": node" | wc -l)
         if [ $OCP_SG -eq 1 ];
         then
           echo "Found OpenShift created security group assigned to $AWS_INSTANCE, opening Portworx ports."
