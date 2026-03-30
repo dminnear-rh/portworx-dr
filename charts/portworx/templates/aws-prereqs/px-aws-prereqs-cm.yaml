@@ -91,7 +91,7 @@ data:
           echo "Found OpenShift created security group assigned to $AWS_INSTANCE, opening Portworx ports."
 
           # Check to see if security group already allows TCP 17001-17022
-          RULE_EXISTS_SG=$(aws ec2 describe-security-groups --region $AWS_REGION --filters "Name=ip-permission.from-port,Values=17001 Name=ip-permission.to-port,Values=17022 Name=ip-permission.group-id,Values=$AWS_SG"  --output text)
+          RULE_EXISTS_SG=$(aws ec2 describe-security-groups --region $AWS_REGION --filters "Name=ip-permission.from-port,Values=17001" "Name=ip-permission.to-port,Values=17022" "Name=ip-permission.group-id,Values=$AWS_SG"  --output text)
           if [ -z "$RULE_EXISTS_SG" ]
           then
             unset RULE_EXISTS_SG
