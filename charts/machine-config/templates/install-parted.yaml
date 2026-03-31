@@ -28,7 +28,8 @@ spec:
             curl -L -o parted.rpm https://mirror.stream.centos.org/9-stream/BaseOS/x86_64/os/Packages/parted-3.5-3.el9.x86_64.rpm && \
             rpm2cpio parted.rpm | cpio -idmv && \
             cp usr/sbin/parted /usr/sbin/parted && \
-            chmod 755 /usr/sbin/parted'
+            cp usr/sbin/parted /sbin/parted && \
+            chmod 755 /usr/sbin/parted /sbin/parted'
           ExecStartPost=/usr/bin/rm -rf /tmp/parted-install
 
           [Install]
