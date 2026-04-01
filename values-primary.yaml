@@ -6,6 +6,7 @@ clusterGroup:
     - golang-external-secrets
     - open-cluster-management
     - portworx
+    - boutique
 
   subscriptions:
     acm:
@@ -43,6 +44,13 @@ clusterGroup:
       name: machine-config
       namespace: portworx
       path: charts/machine-config
+    boutique:
+      name: boutique
+      namespace: boutique
+      chart: boutique
+      chartVersion: 0.0.*
+      extraValueFiles:
+        - /overrides/boutique.yaml
 
   managedClusterGroups:
     secondary-region:
