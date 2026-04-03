@@ -7,8 +7,9 @@
   vars:
     primary_kubeconfig: "/path/to/your/primary.kubeconfig"
     secondary_kubeconfig: "/path/to/your/secondary.kubeconfig"
+    bucket_name: "px-clusterpair"
     app_namespace: "boutique" # Target namespace for DR
-    s3_region: "us-east-1" # AWS S3 Bucket Region
+    s3_region: "us-east-2" # AWS S3 Bucket Region
     px_cred_name: "aws-dr-creds" # Credential name as it will be known inside Portworx
 
   tasks:
@@ -27,40 +28,31 @@
         aws_access_key: "{{ lookup('ini', 'aws_access_key_id section=default file=~/.aws/credentials') }}"
         aws_secret_key: "{{ lookup('ini', 'aws_secret_access_key section=default file=~/.aws/credentials') }}"
 
-    - name: Register S3 credentials in Portworx
+    - name: Generate ClusterPair
       command: >
-        pxctl credentials create
-        --provider s3
-        --s3-access-key {{ aws_access_key }}
-        --s3-secret-key {{ aws_secret_key }}
-        --s3-region {{ s3_region }}
-        {{ px_cred_name }}
-      register: cred_create
-      failed_when:
-        - cred_create.rc != 0
-        - "'already exists' not in cred_create.stderr"
-        - "'already exists' not in cred_create.stdout"
-
-    - name: Generate ClusterPair YAML from Secondary
-      command: >
-        storkctl generate clusterpair remote-secondary-cluster
-        --namespace {{ app_namespace }}
-        --kubeconfig {{ secondary_kubeconfig }}
+        storkctl create clusterpair remote-secondary-cluster
+          --namespace {{ app_namespace }}
+          --src-kube-file {{ primary_kubeconfig }}
+          --dest-kube-file {{ secondary_kubeconfig }}
+          --provider s3
+          --s3-access-key {{ aws_access_key }}
+          --s3-secret-key {{ aws_secret_key }}
+          --s3-region {{ s3_region }}
+          --s3-endpoint s3.{{ s3_region }}.amazonaws.com
+          --unidirectional
+          --src-ep {{ primary_ip }}:9001
+          --dest-ep {{ secondary_ip }}:9001
       register: clusterpair_generation
 
     - name: Parse generated ClusterPair YAML
       set_fact:
         clusterpair_yaml: "{{ clusterpair_generation.stdout | from_yaml }}"
 
-    - name: Inject Object Store credential ID into ClusterPair
-      set_fact:
-        clusterpair_final: "{{ clusterpair_yaml | combine({'spec': {'options': {'credSecretPath': px_cred_name}}}, recursive=True) }}"
-
     - name: Apply ClusterPair to Primary Cluster
       kubernetes.core.k8s:
         kubeconfig: "{{ primary_kubeconfig }}"
         state: present
-        definition: "{{ clusterpair_final }}"
+        definition: "{{ clusterpair_yaml }}"
         namespace: "{{ app_namespace }}"
 
     - name: Verify ClusterPair Status
