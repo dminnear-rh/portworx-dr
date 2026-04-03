@@ -121,4 +121,6 @@ spec:
       enabled: true
     prometheus:
       exportMetrics: true
-  licenseSecret: px-license
+  license:
+    secretName: px-license
+    secretKey: license

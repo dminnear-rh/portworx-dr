@@ -14,7 +14,7 @@ spec:
       type: Opaque
       engineVersion: v2
       data:
-        license.lic: "{{ `{{ .dr_license }}` }}"
+        license: "{{ `{{ .dr_license }}` }}"
   data:
   - secretKey: dr_license
     remoteRef:
