@@ -1,0 +1,6 @@
+agof:
+  iac_repo: https://github.com/dminnear-rh/portworx-dr-iac.git
+  iac_revision: main
+
+configJob:
+  image: quay.io/validatedpatterns/utility-container:latest
