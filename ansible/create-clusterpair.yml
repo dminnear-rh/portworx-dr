@@ -8,9 +8,9 @@
   vars:
     primary_kubeconfig: "/path/to/your/primary.kubeconfig"
     secondary_kubeconfig: "/path/to/your/secondary.kubeconfig"
-    bucket_name: "px-clusterpair"
     app_namespace: "boutique" # Target namespace for DR
     s3_region: "us-east-2" # AWS S3 Bucket Region
+    s3_endpoint: "s3.amazonaws.com"
     px_cred_name: "aws-dr-creds" # Credential name as it will be known inside Portworx
 
   tasks:
@@ -52,7 +52,7 @@
 
     - name: Generate ClusterPair
       command: >
-        storkctl create clusterpair remote-secondary-cluster
+        storkctl create clusterpair {{ app_namespace }}-clusterpair
           --namespace {{ app_namespace }}
           --src-kube-file {{ primary_kubeconfig }}
           --dest-kube-file {{ secondary_kubeconfig }}
@@ -60,23 +60,7 @@
           --s3-access-key {{ aws_access_key }}
           --s3-secret-key {{ aws_secret_key }}
           --s3-region {{ s3_region }}
-          --s3-endpoint s3.{{ s3_region }}.amazonaws.com
-          --unidirectional
+          --s3-endpoint {{ s3_endpoint }}
           --src-ep {{ primary_ext_ep }}:9001
           --dest-ep {{ secondary_ext_ep }}:9001
       register: clusterpair_generation
-
-    - name: Parse generated ClusterPair YAML
-      set_fact:
-        clusterpair_yaml: "{{ clusterpair_generation.stdout | from_yaml }}"
-
-    - name: Apply ClusterPair to Primary Cluster
-      kubernetes.core.k8s:
-        kubeconfig: "{{ primary_kubeconfig }}"
-        state: present
-        definition: "{{ clusterpair_yaml }}"
-        namespace: "{{ app_namespace }}"
-
-    - name: Verify ClusterPair Status
-      debug:
-        msg: "ClusterPair applied successfully. Verify with: storkctl get clusterpair -n {{ app_namespace }} --kubeconfig {{ primary_kubeconfig }}"
