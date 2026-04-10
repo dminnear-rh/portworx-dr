@@ -47,23 +47,23 @@ clusterGroup:
       namespace: vault
       chart: hashicorp-vault
       chartVersion: 0.1.*
-    # portworx:
-    #   name: portworx
-    #   namespace: portworx
-    #   path: charts/portworx
-    #   extraValueFiles:
-    #     - /overrides/portworx.yaml
+    portworx:
+      name: portworx
+      namespace: portworx
+      path: charts/portworx
+      extraValueFiles:
+        - /overrides/portworx.yaml
     machine-config:
       name: machine-config
       namespace: portworx
       path: charts/machine-config
-    # boutique:
-    #   name: boutique
-    #   namespace: boutique
-    #   chart: boutique
-    #   chartVersion: 0.0.*
-    #   extraValueFiles:
-    #     - /overrides/boutique.yaml
+    boutique:
+      name: boutique
+      namespace: boutique
+      chart: boutique
+      chartVersion: 0.0.*
+      extraValueFiles:
+        - /overrides/boutique.yaml
     aap:
       name: ansible-automation-platform
       namespace: ansible-automation-platform
