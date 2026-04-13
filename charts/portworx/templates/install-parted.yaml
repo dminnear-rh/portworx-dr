@@ -1,3 +1,4 @@
+{{- if .Values.installParted}}
 apiVersion: machineconfiguration.openshift.io/v1
 kind: MachineConfig
 metadata:
@@ -35,3 +36,24 @@ spec:
 
           [Install]
           WantedBy=multi-user.target
+---
+# Wait for 10 minutes after installing parted to give all nodes time to restart before installing Portworx
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: wait-ten-minutes
+  labels:
+    app: sleeper-service
+spec:
+  backoffLimit: 4
+  template:
+    spec:
+      containers:
+      - name: sleep-container
+        image: image-registry.openshift-image-registry.svc:5000/openshift/tools:latest
+        command:
+          - "/bin/bash"
+          - "-c"
+          - "echo 'Starting 10-minute sleep...'; sleep 600; echo 'Sleep finished.'"
+      restartPolicy: Never
+{{- end }}

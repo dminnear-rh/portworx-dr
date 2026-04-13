@@ -47,7 +47,9 @@ deleteStrategy: UninstallAndWipe    # Options are Uninstall and UninstallAndWipe
 
 # You can determine the correct versions at the following URL: https://install.portworx.com/$PXVER/version?kbver=$KBVER
 versions:
-  enterprise: "3.5.2.1" # This will be the "version" string
-  ociMon: "3.5.2.1" # This will be the "version" string
+  enterprise: "3.6.0" # This will be the "version" string
+  ociMon: "3.6.0" # This will be the "version" string
   autoPilot: "1.4.0" # This will be the "portworx/autopilot" version string
   stork: "26.2.0" # This will be the "openstorage/stork" version string
+
+installParted: true # Standard RHCOS ISOs are missing the parted utility, required by Portworx. Setting this to true creates a machine config to add parted to the nodes

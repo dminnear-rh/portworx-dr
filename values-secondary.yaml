@@ -25,10 +25,6 @@ clusterGroup:
       namespace: external-secrets
       chart: openshift-external-secrets
       chartVersion: 0.0.*
-    machine-config:
-      name: machine-config
-      namespace: portworx
-      path: charts/machine-config
     portworx:
       name: portworx
       namespace: portworx
