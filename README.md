@@ -54,3 +54,14 @@ Then, all you need to do is install the pattern itself with the command below:
 
 The pattern will automatically add your secondary cluster via ACM and set up the async Portworx cluster pairing
 for the boutique namespace. A migration schedule will also be started with an interval of 5 minutes. This whole process can take 30 minutes or more.
+
+## Related Repos
+
+### [The AAP IaC Repo](https://github.com/validatedpatterns-demos/portworx-dr-iac)
+
+This repo contains the controller configuration used for the jobs, schedules, inventories, credentials and related resources inside of AAP.
+
+### [The rhvp.portworx Ansible Collection](https://github.com/validatedpatterns-demos/rhvp.portworx)
+
+This repo contains the playbooks and roles that are utilized in AAP for automatically configuring the license activation, ACM import, cluster pairing
+and all the other automagic operations that happen as part of this pattern.
