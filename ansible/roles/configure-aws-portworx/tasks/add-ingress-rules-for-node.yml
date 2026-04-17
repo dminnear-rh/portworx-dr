@@ -1,0 +1,33 @@
+---
+- name: Assert worker instance has exactly one security group
+  ansible.builtin.assert:
+    that:
+      - ec2_instance.security_groups | length == 1
+    fail_msg: >-
+      Expected exactly one security group on the worker instance but
+      found {{ ec2_instance.security_groups | length }}
+
+- name: Set facts for worker node security group
+  ansible.builtin.set_fact:
+    aws_sg_id: "{{ ec2_instance.security_groups[0].group_id }}"
+    aws_sg_name: "{{ ec2_instance.security_groups[0].group_name }}"
+    aws_sg_vpc_id: "{{ ec2_instance.vpc_id }}"
+
+- name: Add AWS Security Group ingress rules
+  amazon.aws.ec2_security_group:
+    aws_access_key_id: "{{ aws_access_key_id }}"
+    aws_secret_access_key: "{{ aws_secret_access_key }}"
+    aws_region: "{{ aws_region }}"
+    name: "{{ aws_sg_name }}"
+    description: "Security groups for Portworx"
+    vpc_id: "{{ aws_sg_vpc_id }}"
+    purge_rules: false
+    rules:
+      - group_id: "{{ aws_sg_id }}"
+        ports: "{{ sg_ports.tcp }}"
+        proto: tcp
+        rule_desc: "Portworx [tcp]"
+      - group_id: "{{ aws_sg_id }}"
+        ports: "{{ sg_ports.udp }}"
+        proto: udp
+        rule_desc: "Portworx [udp]"

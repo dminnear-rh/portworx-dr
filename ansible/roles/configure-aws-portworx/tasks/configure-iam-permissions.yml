@@ -1,0 +1,25 @@
+---
+- name: Extract instance profile name from ARN
+  ansible.builtin.set_fact:
+    _instance_profile_name: "{{ ec2_instance.iam_instance_profile.arn.split('/')[-1] }}"
+
+- name: Get instance profile details
+  amazon.aws.iam_instance_profile_info:
+    aws_access_key_id: "{{ aws_access_key_id }}"
+    aws_secret_access_key: "{{ aws_secret_access_key }}"
+    name: "{{ _instance_profile_name }}"
+  register: _instance_profile
+
+- name: Set IAM role name
+  ansible.builtin.set_fact:
+    _iam_role_name: "{{ _instance_profile.iam_instance_profiles[0].roles[0].role_name }}"
+
+- name: Attach Portworx CloudDrive inline policy to worker node IAM role
+  amazon.aws.iam_policy:
+    aws_access_key_id: "{{ aws_access_key_id }}"
+    aws_secret_access_key: "{{ aws_secret_access_key }}"
+    iam_type: role
+    iam_name: "{{ _iam_role_name }}"
+    policy_name: Portworx-CloudDrive
+    policy_json: "{{ px_clouddrive_policy | to_json }}"
+    state: present

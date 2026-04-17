@@ -1,0 +1,52 @@
+---
+- name: Get infra object for hosted cluster
+  kubernetes.core.k8s_info:
+    kubeconfig: "{{ hosted_kubeconfig }}"
+    api_version: config.openshift.io/v1
+    kind: Infrastructure
+    name: cluster
+  register: infra_info
+
+- name: Extract cluster info
+  ansible.builtin.set_fact:
+    cluster_id: "{{ infra_info.resources[0].status.infrastructureName }}"
+    aws_region: "{{ infra_info.resources[0].status.platformStatus.aws.region }}"
+
+- name: Get worker nodepool
+  register: worker_nodepool
+  kubernetes.core.k8s_info:
+    kubeconfig: "{{ hosting_kubeconfig }}"
+    api_version: hypershift.openshift.io/v1beta1
+    kind: NodePool
+    namespace: clusters
+    label_selectors:
+      - "hypershift.openshift.io/auto-created-for-infra={{ cluster_id }}"
+
+- name: Get a worker EC2 instance for hosted cluster
+  amazon.aws.ec2_instance_info:
+    aws_access_key: "{{ aws_access_key_id }}"
+    aws_secret_key: "{{ aws_secret_access_key }}"
+    region: "{{ aws_region }}"
+    filters:
+      "tag:cluster_id": "{{ cluster_id }}"
+      instance-state-name: running
+  register: worker_instances
+
+- name: Assert worker instances were found
+  ansible.builtin.assert:
+    that:
+      - worker_instances.instances | length > 0
+    fail_msg: "No running EC2 instances found with tag cluster_id={{ cluster_id }} in region {{ aws_region }}"
+
+- name: Select a worker instance
+  ansible.builtin.set_fact:
+    ec2_instance: "{{ worker_instances.instances[0] }}"
+
+- name: Configure security group ingress rules
+  ansible.builtin.include_tasks: add-ingress-rules-for-node.yml
+
+- name: Configure IAM permissions for Portworx CloudDrives
+  ansible.builtin.include_tasks: configure-iam-permissions.yml
+
+- name: Apply install-parted MachineConfig to worker NodePool
+  ansible.builtin.include_tasks: apply-install-parted-machineconfig.yml

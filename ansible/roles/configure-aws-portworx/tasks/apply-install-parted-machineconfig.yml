@@ -1,0 +1,69 @@
+---
+- name: Set install-parted MachineConfig content
+  ansible.builtin.set_fact:
+    _install_parted_mc: |
+      apiVersion: machineconfiguration.openshift.io/v1
+      kind: MachineConfig
+      metadata:
+        labels:
+          machineconfiguration.openshift.io/role: worker
+        name: 99-worker-install-parted
+      spec:
+        config:
+          ignition:
+            version: 3.2.0
+          systemd:
+            units:
+            - name: install-parted.service
+              enabled: true
+              contents: |
+                [Unit]
+                Description=Extract parted binary from CentOS Stream RPM
+                Wants=network-online.target
+                After=network-online.target
+                ConditionPathExists=!/usr/sbin/parted
+
+                [Service]
+                Type=oneshot
+                RemainAfterExit=yes
+                ExecStartPre=/usr/bin/mkdir -p /tmp/parted-install
+                ExecStart=/usr/bin/bash -c ' \
+                  cd /tmp/parted-install && \
+                  curl -L -o parted.rpm https://mirror.stream.centos.org/9-stream/BaseOS/x86_64/os/Packages/parted-3.5-3.el9.x86_64.rpm && \
+                  rpm2cpio parted.rpm | cpio -idmv && \
+                  rm -f /usr/sbin/parted /sbin/parted /usr/local/bin/parted && \
+                  cp usr/sbin/parted /usr/sbin/parted && \
+                  cp usr/sbin/parted /sbin/parted && \
+                  cp usr/sbin/parted /usr/local/bin/parted && \
+                  chmod 755 /usr/sbin/parted /sbin/parted /usr/local/bin/parted'
+
+                [Install]
+                WantedBy=multi-user.target
+
+- name: Create ConfigMap for install-parted MachineConfig on hosting cluster
+  kubernetes.core.k8s:
+    kubeconfig: "{{ hosting_kubeconfig }}"
+    state: present
+    definition:
+      apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        name: install-parted-machineconfig
+        namespace: clusters
+      data:
+        config: "{{ _install_parted_mc }}"
+
+- name: Add install-parted ConfigMap reference to NodePool
+  kubernetes.core.k8s:
+    kubeconfig: "{{ hosting_kubeconfig }}"
+    state: present
+    definition:
+      apiVersion: hypershift.openshift.io/v1beta1
+      kind: NodePool
+      metadata:
+        name: "{{ worker_nodepool.resources[0].metadata.name }}"
+        namespace: clusters
+      spec:
+        config: >-
+          {{ (worker_nodepool.resources[0].spec.config | default([]))
+             | union([{'name': 'install-parted-machineconfig'}]) }}

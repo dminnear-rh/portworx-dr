@@ -1,6 +1,6 @@
 agof:
   iac_repo: https://github.com/validatedpatterns-demos/portworx-dr-iac.git
-  iac_revision: main
+  iac_revision: hypershift-install
 
 configJob:
   image: quay.io/validatedpatterns/utility-container:latest

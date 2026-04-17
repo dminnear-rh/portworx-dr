@@ -1,0 +1,72 @@
+---
+- name: Configure AWS for Portworx
+  hosts: localhost
+  connection: local
+  vars:
+    hypershift_kubeconfig: "{{ lookup('env', 'KUBECONFIG') }}"
+    values_secret_file: "~/values-secret-portworx-dr.yaml"
+
+  pre_tasks:
+    - name: Validate hypershift_kubeconfig is set
+      ansible.builtin.assert:
+        that: hypershift_kubeconfig | length > 0
+        fail_msg: >-
+          hypershift_kubeconfig must be provided via -e or KUBECONFIG must be set in the environment.
+
+    - name: Hosting cluster validation
+      block:
+        - name: Get hosted clusters
+          kubernetes.core.k8s_info:
+            api_version: hypershift.openshift.io/v1beta1
+            kind: HostedCluster
+            namespace: clusters
+            kubeconfig: "{{ hypershift_kubeconfig }}"
+          register: clusters_info
+
+        - name: Assert we are logged into hosting cluster
+          ansible.builtin.assert:
+            that: clusters_info.api_found
+            fail_msg: >-
+              You must be logged into the hosting (not the hosted) cluster to run this playbook.
+
+    - name: Read AWS credentials file
+      ansible.builtin.slurp:
+        src: "{{ lookup('env', 'HOME') }}/.aws/credentials"
+      register: _aws_credentials_raw
+
+    - name: Parse AWS credentials
+      ansible.builtin.set_fact:
+        aws_access_key_id: "{{ (_aws_credentials_raw.content | b64decode) | regex_search('aws_access_key_id\\s*=\\s*(\\S+)', '\\1') | first }}"
+        aws_secret_access_key: "{{ (_aws_credentials_raw.content | b64decode) | regex_search('aws_secret_access_key\\s*=\\s*(\\S+)', '\\1') | first }}"
+      no_log: true
+
+    - name: Load values-secret file
+      ansible.builtin.include_vars:
+        file: "{{ values_secret_file }}"
+        name: _values_secret
+
+    - name: Parse hosted cluster kubeconfig paths
+      ansible.builtin.set_fact:
+        _kubeconfigs: "{{ _values_secret.secrets | selectattr('name', 'equalto', 'kubeconfigs') | first }}"
+        primary_kubeconfig: "{{ (_values_secret.secrets | selectattr('name', 'equalto', 'kubeconfigs') | first).fields | selectattr('name', 'equalto', 'primary_kubeconfig') | map(attribute='path') | first }}"
+        secondary_kubeconfig: "{{ (_values_secret.secrets | selectattr('name', 'equalto', 'kubeconfigs') | first).fields | selectattr('name', 'equalto', 'secondary_kubeconfig') | map(attribute='path') | first }}"
+
+  tasks:
+    - name: Print kubeconfigs being used
+      ansible.builtin.debug:
+        msg: |
+          hypershift_kubeconfig: "{{ hypershift_kubeconfig }}"
+          primary_kubeconfig: "{{ primary_kubeconfig }}"
+          secondary_kubeconfig: "{{ secondary_kubeconfig }}"
+
+    - name: Configure AWS for primary cluster
+      ansible.builtin.include_role:
+        name: configure-aws-portworx
+      vars:
+        hosted_kubeconfig: "{{ primary_kubeconfig }}"
+
+    - name: Configure AWS for secondary cluster
+      ansible.builtin.include_role:
+        name: configure-aws-portworx
+      vars:
+        hosted_kubeconfig: "{{ secondary_kubeconfig }}"
